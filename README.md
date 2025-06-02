@@ -1,30 +1,47 @@
 # Tokocrypto tariff update
 
-*Automatically synced with your [v0.dev](https://v0.dev) deployments*
+Alat bantu sederhana untuk menghitung jumlah dana yang dibutuhkan untuk membeli aset kripto di Tokocrypto dengan akurasi perhitungan fee trading (maker/taker) dan pajak sesuai PMK No. 11 Tahun 2025.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/mgalihpps-projects/v0-tokocrypto-tariff-update)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/3p8bAwqogqA)
+🚀 Fitur Utama
+Kalkulasi kebutuhan dana beli koin dengan mempertimbangkan:
 
-## Overview
+Biaya transaksi Tokocrypto (maker dan taker)
 
-This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
+Pajak PPN (0,11%) dan PPh sesuai regulasi terbaru
 
-## Deployment
+Biaya tambahan CFX Fee dari Tokocrypto
 
-Your project is live at:
+Perbandingan biaya antara maker dan taker
 
-**[https://vercel.com/mgalihpps-projects/v0-tokocrypto-tariff-update](https://vercel.com/mgalihpps-projects/v0-tokocrypto-tariff-update)**
+Support transaksi menggunakan IDR dan USDT
 
-## Build your app
+Mudah digunakan untuk memperkirakan total biaya dan hasil beli koin
 
-Continue building your app on:
+📊 Referensi Biaya Tokocrypto 2025
+Jenis Transaksi	Total Fee Maker	Total Fee Taker
+Beli (IDR/Kripto)	0,2322%	0,3322%
+Beli (USDT/Kripto)	0,4044%	0,4044%
+Jual (IDR/Kripto)	0,2222%	0,3222%
+Jual (USDT/Kripto)	0,4044%	0,4044%
 
-**[https://v0.dev/chat/projects/3p8bAwqogqA](https://v0.dev/chat/projects/3p8bAwqogqA)**
+📅 Peraturan Pajak
+Aplikasi ini mengikuti aturan terbaru:
 
-## How It Works
+PPN sebesar 0,11% untuk transaksi di Tokocrypto sebagai PFAK
 
-1. Create and modify your project using [v0.dev](https://v0.dev)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+Pajak dan fee lain sesuai PMK No. 11 Tahun 2025 yang efektif sejak 20 Februari 2025
+
+🔮 Rencana Pengembangan
+UI interaktif untuk simulasi trading Tokocrypto
+
+Tambah fitur perhitungan jual dan swap
+
+Integrasi API harga real-time dari Tokocrypto
+
+Fitur rekomendasi maker/taker berdasarkan volume transaksi
+
+📄 Lisensi
+MIT License
+
+🤝 Kontribusi & Kontak
+Silakan ajukan issue atau pull request di repo GitHub.
