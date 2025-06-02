@@ -91,10 +91,10 @@ export function Calculator() {
       // Calculate final amount after fees
       originalAmount = amount
 
-      if (wholeNumberMode) {
-        // Calculate what original amount is needed to get a whole number after fees
-        const desiredFinalAmount = Math.ceil(amount * (1 - totalFeeRate)) // Round up to nearest whole number
-        adjustedAmount = desiredFinalAmount / (1 - totalFeeRate)
+      if (wholeNumberMode && price > 1) {
+        // Calculate what original amount is needed to get a whole number value after fees
+        const targetValue = Math.ceil(amount * price * (1 - totalFeeRate)) // Round up to nearest whole number
+        adjustedAmount = targetValue / (price * (1 - totalFeeRate))
         originalAmount = adjustedAmount
       }
 
@@ -104,17 +104,14 @@ export function Calculator() {
       totalFeeAmount = takerMakerFeeAmount + taxFeeAmount + cfxFeeAmount
 
       finalAmount = originalAmount - totalFeeAmount
-
-      if (wholeNumberMode) {
-        finalAmount = Math.floor(finalAmount) // Ensure it's a whole number
-      }
     } else {
       // Calculate original amount needed to get target amount after fees
       finalAmount = amount
 
-      if (wholeNumberMode) {
-        // Ensure the target amount is a whole number
-        finalAmount = Math.floor(finalAmount)
+      if (wholeNumberMode && price > 1) {
+        // Ensure the target value is a whole number
+        const targetValue = Math.floor(finalAmount * price)
+        finalAmount = targetValue / price
       }
 
       originalAmount = finalAmount / (1 - totalFeeRate)
@@ -385,7 +382,6 @@ export function Calculator() {
                   />
                 </div>
               </div>
-
               <div className="mt-4 flex items-center space-x-2">
                 <Checkbox
                   id="whole-number"
@@ -395,7 +391,7 @@ export function Calculator() {
                 />
                 <div className="flex items-center gap-2">
                   <Label htmlFor="whole-number" className="cursor-pointer text-gray-700">
-                    Hitung untuk mendapatkan bilangan bulat
+                    Hitung untuk mendapatkan nilai bulat {cryptoType === "regular" ? "(IDR)" : "(USDT)"}
                   </Label>
                   <Tooltip>
                     <TooltipTrigger>
@@ -403,13 +399,15 @@ export function Calculator() {
                     </TooltipTrigger>
                     <TooltipContent>
                       <div className="max-w-xs">
-                        <p className="font-semibold mb-1">Mode Bilangan Bulat:</p>
+                        <p className="font-semibold mb-1">Mode Nilai Bulat:</p>
                         <p>
-                          Aktifkan opsi ini untuk menghitung jumlah yang tepat agar hasil akhir menjadi bilangan bulat
-                          (tanpa desimal).
+                          Aktifkan opsi ini untuk menghitung jumlah koin yang tepat agar nilai akhir menjadi bilangan
+                          bulat
+                          {cryptoType === "regular" ? " dalam IDR" : " dalam USDT"}.
                         </p>
                         <p className="mt-1">
-                          Berguna untuk koin yang tidak mendukung pecahan atau untuk memudahkan perhitungan.
+                          Berguna untuk koin dengan harga pecahan seperti $0.12, $0.05, dll agar hasil akhir menjadi
+                          nilai bulat.
                         </p>
                       </div>
                     </TooltipContent>
@@ -430,17 +428,15 @@ export function Calculator() {
                 <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
                   📊 Hasil Perhitungan
                 </h3>
-
-                {wholeNumberMode && result.adjustedAmount && calculationMode === "forward" && (
+                {wholeNumberMode && result.adjustedAmount && calculationMode === "forward" && result.coinPrice > 1 && (
                   <div className="mb-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded-md">
                     <p className="text-yellow-800">
-                      <span className="font-semibold">💡 Penyesuaian:</span> Untuk mendapatkan bilangan bulat, jumlah
-                      awal disesuaikan dari {formatNumber(Number(targetAmount))} menjadi{" "}
+                      <span className="font-semibold">💡 Penyesuaian:</span> Untuk mendapatkan nilai bulat, jumlah awal
+                      disesuaikan dari {formatNumber(Number(targetAmount))} menjadi{" "}
                       {formatNumber(result.adjustedAmount)} koin.
                     </p>
                   </div>
                 )}
-
                 <div className="space-y-3">
                   <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-sm">
                     <span className="text-gray-700">
@@ -472,9 +468,13 @@ export function Calculator() {
                       <span className="text-2xl font-bold text-green-600">
                         ✅ {formatNumber(result.finalAmount)} koin
                       </span>
-                      {wholeNumberMode && (
+                      {wholeNumberMode && result.coinPrice > 1 && (
                         <span className="text-xs text-green-700 mt-1">
-                          {Number.isInteger(result.finalAmount) ? "Bilangan Bulat ✓" : ""}
+                          Nilai:{" "}
+                          {cryptoType === "regular"
+                            ? formatCurrency(result.finalValue)
+                            : `${Math.round(result.finalValue)} USDT`}
+                          {Number.isInteger(Math.round(result.finalValue)) ? " ✓" : ""}
                         </span>
                       )}
                     </div>
