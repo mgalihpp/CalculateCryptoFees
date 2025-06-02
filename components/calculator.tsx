@@ -10,6 +10,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { HelpCircle } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
 
 // Fee structure based on the provided information
 const feeStructure = {
@@ -50,6 +51,7 @@ export function Calculator() {
   const [targetAmount, setTargetAmount] = useState("")
   const [coinPrice, setCoinPrice] = useState("")
   const [calculationMode, setCalculationMode] = useState("forward")
+  const [wholeNumberMode, setWholeNumberMode] = useState(false)
   const [result, setResult] = useState<{
     originalAmount: number
     fees: {
@@ -63,6 +65,7 @@ export function Calculator() {
     originalValue: number
     finalValue: number
     totalFeeValue: number
+    adjustedAmount?: number
   } | null>(null)
 
   const calculateAmount = () => {
@@ -74,6 +77,7 @@ export function Calculator() {
     const price = Number.parseFloat(coinPrice) || 1 // Default to 1 if no price entered
     const fees = feeStructure[transactionType as "buy" | "sell"][cryptoType as "regular" | "usdt"]
     const takerMakerFee = userType === "taker" ? fees.taker : fees.maker
+    const totalFeeRate = takerMakerFee + fees.tax + fees.cfx
 
     let originalAmount: number
     let finalAmount: number
@@ -81,30 +85,39 @@ export function Calculator() {
     let taxFeeAmount: number
     let cfxFeeAmount: number
     let totalFeeAmount: number
+    let adjustedAmount: number | undefined = undefined
 
     if (calculationMode === "forward") {
       // Calculate final amount after fees
       originalAmount = amount
+
+      if (wholeNumberMode) {
+        // Calculate what original amount is needed to get a whole number after fees
+        const desiredFinalAmount = Math.ceil(amount * (1 - totalFeeRate)) // Round up to nearest whole number
+        adjustedAmount = desiredFinalAmount / (1 - totalFeeRate)
+        originalAmount = adjustedAmount
+      }
+
       takerMakerFeeAmount = originalAmount * takerMakerFee
       taxFeeAmount = originalAmount * fees.tax
       cfxFeeAmount = originalAmount * fees.cfx
       totalFeeAmount = takerMakerFeeAmount + taxFeeAmount + cfxFeeAmount
 
-      if (transactionType === "buy") {
-        finalAmount = originalAmount - totalFeeAmount
-      } else {
-        finalAmount = originalAmount - totalFeeAmount
+      finalAmount = originalAmount - totalFeeAmount
+
+      if (wholeNumberMode) {
+        finalAmount = Math.floor(finalAmount) // Ensure it's a whole number
       }
     } else {
       // Calculate original amount needed to get target amount after fees
       finalAmount = amount
-      const totalFeeRate = takerMakerFee + fees.tax + fees.cfx
 
-      if (transactionType === "buy") {
-        originalAmount = finalAmount / (1 - totalFeeRate)
-      } else {
-        originalAmount = finalAmount / (1 - totalFeeRate)
+      if (wholeNumberMode) {
+        // Ensure the target amount is a whole number
+        finalAmount = Math.floor(finalAmount)
       }
+
+      originalAmount = finalAmount / (1 - totalFeeRate)
 
       takerMakerFeeAmount = originalAmount * takerMakerFee
       taxFeeAmount = originalAmount * fees.tax
@@ -125,6 +138,7 @@ export function Calculator() {
       originalValue: originalAmount * price,
       finalValue: finalAmount * price,
       totalFeeValue: totalFeeAmount * price,
+      adjustedAmount,
     })
   }
 
@@ -371,6 +385,37 @@ export function Calculator() {
                   />
                 </div>
               </div>
+
+              <div className="mt-4 flex items-center space-x-2">
+                <Checkbox
+                  id="whole-number"
+                  checked={wholeNumberMode}
+                  onCheckedChange={(checked) => setWholeNumberMode(checked === true)}
+                  className="border-gray-400 text-blue-600"
+                />
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="whole-number" className="cursor-pointer text-gray-700">
+                    Hitung untuk mendapatkan bilangan bulat
+                  </Label>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <HelpCircle className="h-4 w-4 text-gray-400" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <div className="max-w-xs">
+                        <p className="font-semibold mb-1">Mode Bilangan Bulat:</p>
+                        <p>
+                          Aktifkan opsi ini untuk menghitung jumlah yang tepat agar hasil akhir menjadi bilangan bulat
+                          (tanpa desimal).
+                        </p>
+                        <p className="mt-1">
+                          Berguna untuk koin yang tidak mendukung pecahan atau untuk memudahkan perhitungan.
+                        </p>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </div>
             </div>
 
             <Button
@@ -385,6 +430,17 @@ export function Calculator() {
                 <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
                   📊 Hasil Perhitungan
                 </h3>
+
+                {wholeNumberMode && result.adjustedAmount && calculationMode === "forward" && (
+                  <div className="mb-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded-md">
+                    <p className="text-yellow-800">
+                      <span className="font-semibold">💡 Penyesuaian:</span> Untuk mendapatkan bilangan bulat, jumlah
+                      awal disesuaikan dari {formatNumber(Number(targetAmount))} menjadi{" "}
+                      {formatNumber(result.adjustedAmount)} koin.
+                    </p>
+                  </div>
+                )}
+
                 <div className="space-y-3">
                   <div className="flex justify-between items-center p-3 bg-white rounded-lg shadow-sm">
                     <span className="text-gray-700">
@@ -412,9 +468,16 @@ export function Calculator() {
                     <span className="font-semibold text-gray-800">
                       Jumlah {calculationMode === "forward" ? "Akhir" : "yang Diinginkan"}
                     </span>
-                    <span className="text-2xl font-bold text-green-600">
-                      ✅ {formatNumber(result.finalAmount)} koin
-                    </span>
+                    <div className="flex flex-col items-end">
+                      <span className="text-2xl font-bold text-green-600">
+                        ✅ {formatNumber(result.finalAmount)} koin
+                      </span>
+                      {wholeNumberMode && (
+                        <span className="text-xs text-green-700 mt-1">
+                          {Number.isInteger(result.finalAmount) ? "Bilangan Bulat ✓" : ""}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   {result.coinPrice > 1 && (
                     <>
